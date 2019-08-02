@@ -73,6 +73,25 @@ function motor (driver, pwm, in1, in2)
 	}
 }
 
+function DCControl (driver, pwm, in1, in2)
+{
+	this.motor = new motor(driver, pwm, in1, in2)
+	this.poll  = new intraPol(-100, 100, 0)
+
+	this.update = function (time)
+	{
+		this.poll.drive(time)
+		this.motor.drive(this.poll.current)
+	}
+
+	this.setSpeed = function(speed)
+	{
+		const time = (new Date).getTime()
+		this.poll.move(time, speed, 2)
+	}
+}
+
+
 var options = {
     i2c: i2cBus.openSync(1),
     address: 0x6f,
@@ -112,5 +131,32 @@ function speed ()
  
 
 
+function PCADad (config)
+{
+	this.pollRegister
+	this.end = false; 
 
+	this.update = function ()
+	{
+		if(this.end) return; 
+
+		for(const n of this.pollRegister)
+		{
+			const time = (new Date).getTime()
+			n.update(time)
+		}
+		//setTimeout(this.update, 300)
+
+	}
+
+	this.register = function (p)
+	{
+		this.pollRegister.add(p)
+	}
+
+	this.unRegister = function (p)
+	{
+		this.pollRegister.remove(p)
+	}
+}
 
