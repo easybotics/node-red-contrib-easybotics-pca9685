@@ -13,19 +13,19 @@ function intraPol (min, max, current)
 {
 	this.min = min
 	this.max = max
-	this.current = current; 
+	this.current = current
 
-	this.start		= undefined
-	this.goal		= undefined
-	this.startTime	= undefined
-	this.endTime	= undefined
+	this.start		= current
+	this.goal		= current
+	this.startTime	= 0
+	this.endTime	= 0
 
 	this.drive = function (time)
 	{
 		if(time >= this.endTime)
 		{
 			this.current = this.goal
-			return true;
+			return true
 		}
 
 		this.current = normal(time, this.startTime, this.endTime, this.start, this.goal )
@@ -35,7 +35,7 @@ function intraPol (min, max, current)
 	this.move  = function(time, goal, duration)
 	{
 		this.start = this.current
-		this.goal  = goal;
+		this.goal  = goal
 		this.startTime = time
 		this.endTime = time + duration
 	}
@@ -51,17 +51,21 @@ function motor (pwm, in1, in2)
 
 	this.drive = function (speed, driver)
 	{
-		if(speed > 100)  speed = 100;
-		if(speed < -100) speed = -100;
+		console.log("speed")
+		console.log(speed)
+		if(speed > 100)  speed = 100
+		if(speed < -100) speed = -100
 
-		if(speed >= 0 && !this.direction)
+		if(speed >= 0 && this.direction !== true)
 		{
+			console.log('foward direction!')
 			driver.setPulseRange(this.in1Pin, 0, 4095)
 			driver.setPulseRange(this.in2Pin, 4095, 0)
 			this.direction = true
 		}
-		if(speed < 0 && this.direction)
+		if(speed < 0 && this.direction === true)
 		{
+			console.log('reversing direction')
 			driver.setPulseRange(this.in2Pin, 0, 4095)
 			driver.setPulseRange(this.in1Pin, 4095, 0)
 			this.direction = false
@@ -91,14 +95,14 @@ function DCControl (pwm, in1, in2)
 
 function PCADad (config)
 {
-	const node = this;
-	node.pollRegister = new Set();
-	node.end = false; 
-	node.start = false;
+	const node = this
+	node.pollRegister = new Set()
+	node.end = false;
+	node.start = false
 	
 	this.update = function ()
 	{
-		if(node.end) return; 
+		if(node.end) return
 
 		if(node.start)
 		{
@@ -120,7 +124,7 @@ function PCADad (config)
 
 	this.unRegister = function (p)
 	{
-		node.pollRegister.remove(p)
+		node.pollRegister.delete(p)
 	}
 
 	const options = 
@@ -129,7 +133,7 @@ function PCADad (config)
 		address: 0x6f, //settable
 		frequency: 1600, 
 		debug: false
-	};
+	}
 
 	this.pwm = new Pca9685Driver(options, function (err)
 	{
@@ -137,18 +141,17 @@ function PCADad (config)
 		{
 			console.error("Error initing PCA9685")
 			console.error(err)
-			return;
+			return
 		}
 		console.error("inited pca")
-		node.start = true;
-		node.update();
+		node.start = true
+		node.update()
 	});
 
 }
 
 module.exports = function (RED)
 {
-	var oneHandle = false; 
 
 	function PCAHandle (config)
 	{
@@ -181,7 +184,7 @@ module.exports = function (RED)
 
 		this.unRegister = function (p)
 		{
-			node.pollRegister.remove(p)
+			node.pollRegister.delete(p)
 		}
 
 		const options = 
@@ -190,20 +193,20 @@ module.exports = function (RED)
 			address: 0x6f, //settable
 			frequency: 1600, 
 			debug: false
-		};
+		}
 
 		this.pwm = new Pca9685Driver(options, function (err)
 		{
 			if(err) 
 			{
-				console.error("Error initing PCA9685")
-				console.error(err)
-				return;
+				node.error('Error initing PCA9685')
+				node.error(err)
+				return
 			}
-			console.error("inited pca")
-			node.start = true;
-			node.update();
-		});
+			node.error('inited pca')
+			node.start = true
+			node.update()
+		})
 	}
 
 	function DCMotor (config)
@@ -216,6 +219,7 @@ module.exports = function (RED)
 		node.left   = config.left
 		node.right  = config.right 
 
+		node.handle.unRegister(node.motor)
 		node.motor = new DCControl(node.pwmPin, node.left, node.right)
 		node.handle.register(node.motor)
 
@@ -226,11 +230,11 @@ module.exports = function (RED)
 
 		node.on('close', function ()
 		{
-			node.handle.unRegister(node.motor); 
+			node.handle.unRegister(node.motor)
 		})
 	}
 
-	RED.nodes.registerType('pca-manager', Handle)
+	RED.nodes.registerType('pca-manager', PCAHandle)
 	RED.nodes.registerType('pca-DC-motor', DCMotor)
 
 }
