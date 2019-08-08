@@ -9,11 +9,11 @@
 		}, 
 
 		icon: "arrow-in.png", 
-		label: 'PCA Manager', 
+		label: 'PCA Manager'
 	});
 </script>
 
-<script type="text/x-red" data-template-name-"pca-manager">
+<script type="text/x-red" data-template-name="pca-manager">
 	<div class = "form-row">
 		<label for="node-config-input-name"><i class="icon-tag"></i> Name </label>
 	</div>
@@ -26,24 +26,29 @@
 		defaults: 
 		{
 			name: {value:""}, 
-			pwm: {value: 11},
-			left: {value: 13}, 
-			right: {value: 14},
-			handle: {type: 'pca-manager', required:true}, 
+			pwm: {value: 13},
+			left: {value: 12}, 
+			right: {value: 11},
+			handle: {type: 'pca-manager', required:true}
 		}, 
 		inputs: 1, 
 		outputs: 1, 
 		icon: "arrow-in.png", 
 		label: function()
 		{
-			return this.name || "DC Motor",
-		},
+			return this.name || "DC Motor"
+		}
 	});
 </script>
 
-<script type="text/x-red" data-template-name-"pca-DC-motor">
+<script type="text/x-red" data-template-name="pca-DC-motor">
+	<div class= 'form-row'>
+		<label for='node-config-input-handle'><i class ='fa fa-tag'></i> PCA Handle</label>
+		<input type='text' id='node-input-handle'/>
+	</div> 
+
 	<div class = "form-row">
 		<label for="node-config-input-name"><i class="icon-tag"></i> Name </label>
+		<input type="text" id="node-input-name" placeholder="Name">
 	</div>
 </script>
-
