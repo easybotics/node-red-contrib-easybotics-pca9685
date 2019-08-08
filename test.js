@@ -29,7 +29,6 @@ function intraPol (min, max, current)
 		}
 
 		this.current = normal(time, this.startTime, this.endTime, this.start, this.goal )
-		console.log(this.current)
 		return false
 	}
 
@@ -43,120 +42,116 @@ function intraPol (min, max, current)
 }
 
 
-function motor (driver, pwm, in1, in2)
+function motor (pwm, in1, in2)
 {
-	this.driver = driver
 	this.pwmPin = pwm
 	this.in1Pin = in1
 	this.in2Pin = in2
 	this.direction = undefined
 
-	this.drive = function (speed)
+	this.drive = function (speed, driver)
 	{
 		if(speed > 100)  speed = 100;
 		if(speed < -100) speed = -100;
 
 		if(speed >= 0 && !this.direction)
 		{
-			this.driver.setPulseRange(this.in1Pin, 0, 4095)
-			this.driver.setPulseRange(this.in2Pin, 4095, 0)
+			driver.setPulseRange(this.in1Pin, 0, 4095)
+			driver.setPulseRange(this.in2Pin, 4095, 0)
 			this.direction = true
 		}
 		if(speed < 0 && this.direction)
 		{
-			this.driver.setPulseRange(this.in2Pin, 0, 4095)
-			this.driver.setPulseRange(this.in1Pin, 4095, 0)
+			driver.setPulseRange(this.in2Pin, 0, 4095)
+			driver.setPulseRange(this.in1Pin, 4095, 0)
 			this.direction = false
 		}
 
-		this.driver.setPulseRange(this.pwmPin, 0, 40 * Math.abs(speed))
+		driver.setPulseRange(this.pwmPin, 0, 40 * Math.abs(speed))
 	}
 }
 
-function DCControl (driver, pwm, in1, in2)
+function DCControl (pwm, in1, in2)
 {
-	this.motor = new motor(driver, pwm, in1, in2)
+	this.motor = new motor(pwm, in1, in2)
 	this.poll  = new intraPol(-100, 100, 0)
 
-	this.update = function (time)
+	this.update = function (time, driver)
 	{
 		this.poll.drive(time)
-		this.motor.drive(this.poll.current)
+		this.motor.drive(this.poll.current, driver)
 	}
 
 	this.setSpeed = function(speed)
 	{
 		const time = (new Date).getTime()
-		this.poll.move(time, speed, 2)
+		this.poll.move(time, speed, 500)
 	}
 }
 
-
-var options = {
-    i2c: i2cBus.openSync(1),
-    address: 0x6f,
-    frequency: 1600,
-    debug:false 
-};
-var pwm = new Pca9685Driver(options, function(err) {
-    if (err) {
-        console.error("Error initializing PCA9685");
-		console.error(err);
-        process.exit(-1);
-    }
-const time = (new Date).getTime()
-var test = new intraPol(-100, 100, 0)
-var wheel = new motor(pwm, 13, 12, 11)
-test.move(time,100 , 10000)
-//wheel.drive(50)
-var direction = true
-
-function speed ()
-	{
-		const time = (new Date).getTime()
-		wheel.drive(test.current)
-		if(test.drive(time))
-		{
-			var val = direction ? -100 : 100
-			direction = !direction
-			test.move(time, val, 10000)
-			return speed()
-		}
-			setTimeout(speed, 10)
-	}
-
-	speed()
-
-});
- 
-
-
 function PCADad (config)
 {
-	this.pollRegister
-	this.end = false; 
-
+	const node = this;
+	node.pollRegister = new Set();
+	node.end = false; 
+	node.start = false;
+	
 	this.update = function ()
 	{
-		if(this.end) return; 
+		if(node.end) return; 
 
-		for(const n of this.pollRegister)
+		if(node.start)
 		{
-			const time = (new Date).getTime()
-			n.update(time)
+			for(const n of node.pollRegister)
+			{
+				const time = (new Date).getTime()
+				n.update(time, node.pwm)
+			}
 		}
-		//setTimeout(this.update, 300)
+
+		setTimeout(node.update, 300)
 
 	}
 
 	this.register = function (p)
 	{
-		this.pollRegister.add(p)
+		node.pollRegister.add(p)
 	}
 
 	this.unRegister = function (p)
 	{
-		this.pollRegister.remove(p)
+		node.pollRegister.remove(p)
 	}
+
+	const options = 
+	{
+		i2c: i2cBus.openSync(1), 
+		address: 0x6f, //settable
+		frequency: 1600, 
+		debug: false
+	};
+
+	this.pwm = new Pca9685Driver(options, function (err)
+	{
+		if(err) 
+		{
+			console.error("Error initing PCA9685")
+			console.error(err)
+			return;
+		}
+		console.error("inited pca")
+		node.start = true;
+	});
+
+	this.update();
 }
+
+var comp = new PCADad ();
+var dc   = new DCControl(13, 12, 11);
+comp.register(dc); 
+dc.setSpeed(100);
+setTimeout(function()
+	{
+		dc.setSpeed(0);
+	}, 10000);
 
