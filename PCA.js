@@ -213,11 +213,20 @@ module.exports = function (RED)
 	{
 		RED.nodes.createNode(this, config)
 		const node = this 
+		const pins = new Set()
+		const motorNum = config.motor
+
+		pins[0] = [8, 9, 10]
+		pins[1] = [13, 12, 11]
+		pins[2] = [2, 3, 4]
+		pins[3] = [7, 6, 5]
+
 
 		node.handle = RED.nodes.getNode(config.handle)
-		node.pwmPin = config.pwm 
-		node.left   = config.left
-		node.right  = config.right 
+
+		node.pwmPin = pins[motorNum][0] 
+		node.left   = pins[motorNum][1]
+		node.right  = pins[motorNum][2] 
 
 		node.handle.unRegister(node.motor)
 		node.motor = new DCControl(node.pwmPin, node.left, node.right)
