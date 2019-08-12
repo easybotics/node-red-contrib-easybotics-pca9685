@@ -212,10 +212,13 @@ module.exports = function (RED)
 		const pins = new Set()
 		const motorNum = config.motor
 
-		pins[0] = [8, 9, 10]
-		pins[1] = [13, 12, 11]
-		pins[2] = [2, 3, 4]
-		pins[3] = [7, 6, 5]
+		console.log("motor num")
+		console.log(motorNum)
+
+		pins[1] = [8, 9, 10]
+		pins[2] = [13, 12, 11]
+		pins[3] = [2, 3, 4]
+		pins[4] = [7, 6, 5]
 
 
 		node.handle = RED.nodes.getNode(config.handle)
