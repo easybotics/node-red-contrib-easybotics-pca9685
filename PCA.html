@@ -26,9 +26,19 @@
 		defaults: 
 		{
 			name: {value:""}, 
-			motor: {value: 1},
+			motor: {value: 2, required: true},
 			handle: {type: 'pca-manager', required:true}
 		}, 
+
+		oneditprepare: function ()
+		{
+			$("#node-config-input-motor").change(function()
+				{
+					this.motor = $("#node-config-input-motor").val();
+				});
+
+			$("#node-config-input-motor").val(this.motor);
+		},
 		inputs: 1, 
 		outputs: 1, 
 		icon: "arrow-in.png", 
@@ -44,6 +54,16 @@
 		<label for='node-config-input-handle'><i class ='fa fa-tag'></i> PCA Handle</label>
 		<input type='text' id='node-input-handle'/>
 	</div> 
+
+	<div class='form-row'>
+		<label for='node-config-input-motor'><i class='icon-bookmark'></i> Motor Number</label>
+		<select id = 'node-config-input-motor'>
+			<option value=1> 1 </option>
+			<option value=2> 2 </option>
+			<option value=3> 3 </option>
+			<option value=4> 4 </option>
+		</select>
+	</div>
 
 	<div class = "form-row">
 		<label for="node-config-input-name"><i class="icon-tag"></i> Name </label>
