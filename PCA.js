@@ -51,21 +51,17 @@ function motor (pwm, in1, in2)
 
 	this.drive = function (speed, driver)
 	{
-		console.log("speed")
-		console.log(speed)
 		if(speed > 100)  speed = 100
 		if(speed < -100) speed = -100
 
 		if(speed >= 0 && this.direction !== true)
 		{
-			console.log('foward direction!')
 			driver.setPulseRange(this.in1Pin, 0, 4095)
 			driver.setPulseRange(this.in2Pin, 4095, 0)
 			this.direction = true
 		}
 		if(speed < 0 && this.direction === true)
 		{
-			console.log('reversing direction')
 			driver.setPulseRange(this.in2Pin, 0, 4095)
 			driver.setPulseRange(this.in1Pin, 4095, 0)
 			this.direction = false
