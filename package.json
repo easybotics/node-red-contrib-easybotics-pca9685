@@ -35,7 +35,7 @@
   "license": "GPL2",
   "node-red": {
     "nodes": {
-      "sensors": "PCA.js"
+      "PCA": "PCA.js"
     }
   }
 }
