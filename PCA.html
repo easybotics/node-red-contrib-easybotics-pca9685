@@ -26,10 +26,11 @@
 		defaults: 
 		{
 			name: {value:""}, 
-			motor: {value: 2, required: true},
-			handle: {type: 'pca-manager', required:true}
+			motor: {value:"1", required: true},
+			handle: {type: 'pca-manager', required:true},
 		}, 
 
+		/*
 		oneditprepare: function ()
 		{
 			$("#node-config-input-motor").change(function()
@@ -39,6 +40,7 @@
 
 			$("#node-config-input-motor").val(this.motor);
 		},
+		*/
 		inputs: 1, 
 		outputs: 1, 
 		icon: "arrow-in.png", 
@@ -51,22 +53,24 @@
 
 <script type="text/x-red" data-template-name="pca-DC-motor">
 	<div class= 'form-row'>
-		<label for='node-config-input-handle'><i class ='fa fa-tag'></i> PCA Handle</label>
+		<label for='node-input-handle'><i class ='fa fa-tag'></i> PCA Handle</label>
 		<input type='text' id='node-input-handle'/>
 	</div> 
 
+
+
 	<div class='form-row'>
-		<label for='node-config-input-motor'><i class='icon-bookmark'></i> Motor Number</label>
-		<select id = 'node-config-input-motor'>
-			<option value=1> 1 </option>
-			<option value=2> 2 </option>
-			<option value=3> 3 </option>
-			<option value=4> 4 </option>
+		<label for='node-input-motor'><i class='icon-bookmark'></i> Motor Number</label>
+		<select id='node-input-motor'>
+			<option> 1 </option>
+			<option> 2 </option>
+			<option> 3 </option>
+			<option> 4 </option>
 		</select>
 	</div>
 
 	<div class = "form-row">
-		<label for="node-config-input-name"><i class="icon-tag"></i> Name </label>
+		<label for="node-input-name"><i class="icon-tag"></i> Name </label>
 		<input type="text" id="node-input-name" placeholder="Name">
 	</div>
 </script>
