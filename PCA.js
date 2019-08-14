@@ -212,9 +212,6 @@ module.exports = function (RED)
 		const pins = new Set()
 		const motorNum = config.motor
 
-		console.log("motor num")
-		console.log(motorNum)
-
 		pins[1] = [8, 9, 10]
 		pins[2] = [13, 12, 11]
 		pins[3] = [2, 3, 4]
