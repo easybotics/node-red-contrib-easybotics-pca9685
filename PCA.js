@@ -51,6 +51,7 @@ function motor (pwm, in1, in2)
 
 	this.drive = function (speed, driver)
 	{
+		console.log(speed)
 		if(speed > 100)  speed = 100
 		if(speed < -100) speed = -100
 
@@ -73,6 +74,7 @@ function motor (pwm, in1, in2)
 
 function DCControl (pwm, in1, in2)
 {
+	console.log("aa")
 	this.motor = new motor(pwm, in1, in2)
 	this.poll  = new intraPol(-100, 100, 0)
 
@@ -89,72 +91,23 @@ function DCControl (pwm, in1, in2)
 	}
 }
 
-function PCADad (config)
-{
-	const node = this
-	node.pollRegister = new Set()
-	node.end = false;
-	node.start = false
-	
-	this.update = function ()
-	{
-		if(node.end) return
-
-		if(node.start)
-		{
-			for(const n of node.pollRegister)
-			{
-				const time = (new Date).getTime()
-				n.update(time, node.pwm)
-			}
-		}
-
-		setTimeout(node.update, 300)
-
-	}
-
-	this.register = function (p)
-	{
-		node.pollRegister.add(p)
-	}
-
-	this.unRegister = function (p)
-	{
-		node.pollRegister.delete(p)
-	}
-
-	const options = 
-	{
-		i2c: i2cBus.openSync(1), 
-		address: 0x6f, //settable
-		frequency: 1600, 
-		debug: false
-	}
-
-	this.pwm = new Pca9685Driver(options, function (err)
-	{
-		if(err) 
-		{
-			console.error("Error initing PCA9685")
-			console.error(err)
-			return
-		}
-		console.error("inited pca")
-		node.start = true
-		node.update()
-	});
-
-}
-
 module.exports = function (RED)
 {
 
 	function PCAHandle (config)
 	{
-		const node = this;
-		node.pollRegister = new Set();
-		node.end = false; 
-		node.start = false;
+		const node	 = this;
+		RED.nodes.createNode(this, config)
+		node.motors	 = [undefined, undefined, undefined, undefined]
+		node.pins	 = new Set()
+
+		node.pins[1] = [8, 9, 10]
+		node.pins[2] = [13, 12, 11]
+		node.pins[3] = [2, 3, 4]
+		node.pins[4] = [7, 6, 5]
+
+		node.end	 = false; 
+		node.start	 = false;
 		
 		this.update = function ()
 		{
@@ -162,8 +115,10 @@ module.exports = function (RED)
 
 			if(node.start)
 			{
-				for(const n of node.pollRegister)
+				for(const n of node.motors)
 				{
+					if(!n) continue; 
+
 					const time = (new Date).getTime()
 					n.update(time, node.pwm)
 				}
@@ -173,14 +128,18 @@ module.exports = function (RED)
 
 		}
 
-		this.register = function (p)
+		this.register = function (n)
 		{
-			node.pollRegister.add(p)
-		}
 
-		this.unRegister = function (p)
-		{
-			node.pollRegister.delete(p)
+			if(n < 1) n = 1 
+			if(n > 4) n = 4 
+			if(node.motors[n - 1]) return
+
+			const pwmPin = node.pins[n][0] 
+			const left   = node.pins[n][1]
+			const right  = node.pins[n][2] 
+
+			node.motors[n - 1] = new DCControl(pwmPin, left, right); 
 		}
 
 		const options = 
@@ -203,39 +162,26 @@ module.exports = function (RED)
 			node.start = true
 			node.update()
 		})
+
+		this.on('close', function() 
+		{
+			node.end = true
+		})
 	}
 
 	function DCMotor (config)
 	{
 		RED.nodes.createNode(this, config)
 		const node = this 
-		const pins = new Set()
 		const motorNum = config.motor
 
-		pins[1] = [8, 9, 10]
-		pins[2] = [13, 12, 11]
-		pins[3] = [2, 3, 4]
-		pins[4] = [7, 6, 5]
-
-
 		node.handle = RED.nodes.getNode(config.handle)
+		node.handle.register(motorNum)
 
-		node.pwmPin = pins[motorNum][0] 
-		node.left   = pins[motorNum][1]
-		node.right  = pins[motorNum][2] 
-
-		node.handle.unRegister(node.motor)
-		node.motor = new DCControl(node.pwmPin, node.left, node.right)
-		node.handle.register(node.motor)
 
 		node.on('input', function (msg)
 		{
-			node.motor.setSpeed(msg.payload)
-		})
-
-		node.on('close', function ()
-		{
-			node.handle.unRegister(node.motor)
+			node.handle.motors[motorNum - 1].setSpeed(msg.payload)
 		})
 	}
 
@@ -243,5 +189,3 @@ module.exports = function (RED)
 	RED.nodes.registerType('pca-DC-motor', DCMotor)
 
 }
-
-
