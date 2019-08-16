@@ -51,7 +51,6 @@ function motor (pwm, in1, in2)
 
 	this.drive = function (speed, driver)
 	{
-		console.log(speed)
 		if(speed > 100)  speed = 100
 		if(speed < -100) speed = -100
 
@@ -74,7 +73,6 @@ function motor (pwm, in1, in2)
 
 function DCControl (pwm, in1, in2)
 {
-	console.log("aa")
 	this.motor = new motor(pwm, in1, in2)
 	this.poll  = new intraPol(-100, 100, 0)
 
@@ -84,10 +82,10 @@ function DCControl (pwm, in1, in2)
 		this.motor.drive(this.poll.current, driver)
 	}
 
-	this.setSpeed = function(speed)
+	this.setSpeed = function(speed, duration = 500)
 	{
 		const time = (new Date).getTime()
-		this.poll.move(time, speed, 500)
+		this.poll.move(time, speed, duration)
 	}
 }
 
@@ -109,7 +107,7 @@ module.exports = function (RED)
 		node.end	 = false; 
 		node.start	 = false;
 		
-		this.update = function ()
+		this.update = function (instant = false)
 		{
 			if(node.end) return; 
 
@@ -124,8 +122,8 @@ module.exports = function (RED)
 				}
 			}
 
+			if(instant) return; 
 			setTimeout(node.update, 300)
-
 		}
 
 		this.register = function (n)
@@ -182,6 +180,7 @@ module.exports = function (RED)
 		node.on('input', function (msg)
 		{
 			node.handle.motors[motorNum - 1].setSpeed(msg.payload)
+			node.handle.update(true)
 		})
 	}
 
