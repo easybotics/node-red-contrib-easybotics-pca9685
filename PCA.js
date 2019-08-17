@@ -172,6 +172,7 @@ module.exports = function (RED)
 		RED.nodes.createNode(this, config)
 		const node = this 
 		const motorNum = config.motor
+		const smooth = parseInt(config.smooth)
 
 		node.handle = RED.nodes.getNode(config.handle)
 		node.handle.register(motorNum)
@@ -179,7 +180,10 @@ module.exports = function (RED)
 
 		node.on('input', function (msg)
 		{
-			node.handle.motors[motorNum - 1].setSpeed(msg.payload)
+			const runSpeed  = msg.payload.speed	 === undefined ? parseInt(msg.payload) : parseInt(msg.payload.speed);
+			const runSmooth = msg.payload.smooth === undefined ? parseInt(smooth)	   : parseInt(msg.payload.smooth);
+
+			node.handle.motors[motorNum - 1].setSpeed(runSpeed, runSmooth); 
 			node.handle.update(true)
 		})
 	}
