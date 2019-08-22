@@ -161,8 +161,18 @@ module.exports = function (RED)
 			node.update()
 		})
 
+		this.stop = function()
+		{
+			for(const n of node.motors)
+			{
+				if(!n) continue; 
+				n.setSpeed(0, 0);
+			}
+		}
+
 		this.on('close', function() 
 		{
+			this.stop();
 			node.end = true
 		})
 	}
