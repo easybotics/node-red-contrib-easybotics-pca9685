@@ -97,7 +97,7 @@ module.exports = function (RED)
 		const node	 = this;
 		RED.nodes.createNode(this, config)
 		node.motors	 = [undefined, undefined, undefined, undefined]
-		node.pins	 = new Set()
+		node.pins	 = new Map()
 
 		node.pins[1] = [8, 9, 10]
 		node.pins[2] = [13, 12, 11]
