@@ -89,3 +89,65 @@
 		For example a speed of 50 and smoothing of 10000 accelerates the motor to half speed over ten seconds 
 	</p>
 </script>
+
+
+<script type="text/javascript">
+	RED.nodes.registerType('pca-servo', 
+	{
+		category: 'PCA', 
+		defaults: 
+		{
+			name: {value:""}, 
+			pin: {value:"0", required: true},
+			smooth: {value:500, required: true},
+			handle: {type: 'pca-manager', required:true},
+		}, 
+
+		inputs: 1, 
+		outputs: 1, 
+		icon: "arrow-in.png", 
+		label: function()
+		{
+			return this.name || "Servo"
+		}
+	});
+</script>
+
+<script type="text/x-red" data-template-name="pca-servo">
+	<div class= 'form-row'>
+		<label for='node-input-handle'><i class ='fa fa-tag'></i> PCA Handle</label>
+		<input type='text' id='node-input-handle'/>
+	</div> 
+
+	<div class= 'form-row'>
+		<label for='node-input-smooth'><i class ='fa fa-tag'></i> Smoothing</label>
+		<input type='number' id='node-input-smooth' min="0" placeholder="Default: 500 milliseconds"/>
+	</div> 
+
+	<div class='form-row'>
+		<label for='node-input-pin'><i class='icon-bookmark'></i>Servo Pin Number</label>
+		<select id='node-input-pin'>
+			<option> 1 </option>
+			<option> 0 </option>
+			<option> 14 </option>
+			<option> 15 </option>
+		</select>
+	</div>
+
+	<div class = "form-row">
+		<label for="node-input-name"><i class="icon-tag"></i> Name </label>
+		<input type="text" id="node-input-name" placeholder="Name">
+	</div>
+</script>
+
+<script type="text/x-red" data-help-name="pca-servo">
+	<p>
+		a msg.payload of just an integer moves the servo that angle over the smoothing period defiend in the config <br>
+		Limit is betwteen -90 and 90 <br> <br> 
+		<b> msg.payload.angle: </b> The angle to move the servo too <br>
+		<b> msg.payload.smooth: </b> The number of milliseconds move the servo over <br> <br>
+
+		For example an angle of 45 and smoothing of 10000 moves the servo to 45 degrees in ten seconds 
+	</p>
+</script>
+
