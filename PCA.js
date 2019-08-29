@@ -71,6 +71,36 @@ function motor (pwm, in1, in2)
 	}
 }
 
+function servo (pwm)
+{
+	this.pwmPin = pwm 
+
+	this.drive = function (speed, driver)
+	{
+		console.log(speed)
+		driver.setPulseLength(this.pwmPin, speed)
+	}
+}
+
+function servoControl (pwm)
+{
+	this.motor = new servo(pwm)
+	this.poll  = new intraPol(500, 2400, 1500)
+
+	this.update = function (time, driver)
+	{
+		this.poll.drive(time)
+		this.motor.drive(this.poll.current, driver)
+	}
+
+	this.setInput = function(speed, duration = 500)
+	{
+		const time = (new Date).getTime()
+		this.poll.move(time, speed, duration)
+	}
+}
+	
+
 function DCControl (pwm, in1, in2)
 {
 	this.motor = new motor(pwm, in1, in2)
@@ -97,7 +127,9 @@ module.exports = function (RED)
 		const node	 = this;
 		RED.nodes.createNode(this, config)
 		node.motors	 = [undefined, undefined, undefined, undefined]
+		node.servos  = [new servoControl(0)]
 		node.pins	 = new Map()
+
 
 		node.pins[1] = [8, 9, 10]
 		node.pins[2] = [13, 12, 11]
@@ -106,6 +138,10 @@ module.exports = function (RED)
 
 		node.end	 = false; 
 		node.start	 = false;
+
+		steps = [500, 1500, 2400]
+		counter = 0;
+		step = 0;
 		
 		this.update = function (instant = false)
 		{
@@ -120,10 +156,24 @@ module.exports = function (RED)
 					const time = (new Date).getTime()
 					n.update(time, node.pwm)
 				}
+				for(const s of node.servos)
+				{
+					if(!s) continue; 
+					const time = (new Date).getTime()
+					s.update(time, node.pwm)
+					if(counter > 26)
+					{
+
+						s.setInput(steps[step % steps.length], 3000)
+						counter = 0
+						step++
+					}
+					counter++
+				}
 			}
 
 			if(instant) return; 
-			setTimeout(node.update, 300)
+			setTimeout(node.update, 200)
 		}
 
 		this.register = function (n)
@@ -144,7 +194,7 @@ module.exports = function (RED)
 		{
 			i2c: i2cBus.openSync(1), 
 			address: 0x6f, //settable
-			frequency: 1600, 
+			frequency: 50, 
 			debug: false
 		}
 
@@ -159,7 +209,13 @@ module.exports = function (RED)
 			node.error('inited pca')
 			node.start = true
 			node.update()
+
 		})
+
+	
+
+
+	
 
 		this.stop = function()
 		{
@@ -197,6 +253,29 @@ module.exports = function (RED)
 			node.handle.update(true)
 		})
 	}
+
+	function Servo (config)
+	{
+		RED.nodes.createNode(this, config)
+		const node = this 
+		const pinNum = config.motor 
+		const smooth = parseInt(config.smooth) 
+
+		node.handle = RED.nodes.getNode(config.handle) 
+		node.handle.registerServo(pinNum) 
+
+		/*
+		node.on('input', function (msg)
+		{
+			const runSpeed  = msg.payload.speed	 === undefined ? parseInt(msg.payload) : parseInt(msg.payload.speed);
+			const runSmooth = msg.payload.smooth === undefined ? parseInt(smooth)	   : parseInt(msg.payload.smooth);
+
+			node.handle.motors[motorNum - 1].setSpeed(runSpeed, runSmooth); 
+			node.handle.update(true)
+		})
+		*/
+	}
+
 
 	RED.nodes.registerType('pca-manager', PCAHandle)
 	RED.nodes.registerType('pca-DC-motor', DCMotor)
