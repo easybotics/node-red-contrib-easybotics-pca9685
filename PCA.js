@@ -93,10 +93,11 @@ function servoControl (pwm)
 		this.motor.drive(this.poll.current, driver)
 	}
 
-	this.setInput = function(speed, duration = 500)
+	this.setInput = function(angle, duration = 500)
 	{
+		const pulse = normal(angle, -90, 90, 500, 2400); 
 		const time = (new Date).getTime()
-		this.poll.move(time, speed, duration)
+		this.poll.move(time, pulse, duration)
 	}
 }
 	
@@ -127,21 +128,22 @@ module.exports = function (RED)
 		const node	 = this;
 		RED.nodes.createNode(this, config)
 		node.motors	 = [undefined, undefined, undefined, undefined]
-		node.servos  = [new servoControl(0)]
+		node.servos  = [undefined, undefined, undefined, undefined]
 		node.pins	 = new Map()
+		node.sPins	 = new Map()
 
+		node.pins.set(1,  [8, 9, 10])
+		node.pins.set(2, [13, 12, 11])
+		node.pins.set(3, [2, 3, 4])
+		node.pins.set(4, [7, 6, 5])
 
-		node.pins[1] = [8, 9, 10]
-		node.pins[2] = [13, 12, 11]
-		node.pins[3] = [2, 3, 4]
-		node.pins[4] = [7, 6, 5]
+		node.sPins.set(1,0)
+		node.sPins.set(0,1) 
+		node.sPins.set(14,2) 
+		node.sPins.set(15,3)
 
 		node.end	 = false; 
 		node.start	 = false;
-
-		steps = [500, 1500, 2400]
-		counter = 0;
-		step = 0;
 		
 		this.update = function (instant = false)
 		{
@@ -159,16 +161,9 @@ module.exports = function (RED)
 				for(const s of node.servos)
 				{
 					if(!s) continue; 
+
 					const time = (new Date).getTime()
 					s.update(time, node.pwm)
-					if(counter > 26)
-					{
-
-						s.setInput(steps[step % steps.length], 3000)
-						counter = 0
-						step++
-					}
-					counter++
 				}
 			}
 
@@ -183,12 +178,22 @@ module.exports = function (RED)
 			if(n > 4) n = 4 
 			if(node.motors[n - 1]) return
 
-			const pwmPin = node.pins[n][0] 
-			const left   = node.pins[n][1]
-			const right  = node.pins[n][2] 
+			const pwmPin = node.pins.get(n)[0] 
+			const left   = node.pins.get(n)[1]
+			const right  = node.pins.get(n)[2] 
 
 			node.motors[n - 1] = new DCControl(pwmPin, left, right); 
 		}
+
+		this.registerServo = function (n)
+		{
+			if(!node.sPins.has(n)) throw('unknown pin!')
+
+			if(node.servos[ node.sPins.get(n)]) return
+
+			node.servos[ node.sPins.get(n)] = new servoControl(n)
+		}
+
 
 		const options = 
 		{
@@ -212,11 +217,6 @@ module.exports = function (RED)
 
 		})
 
-	
-
-
-	
-
 		this.stop = function()
 		{
 			for(const n of node.motors)
@@ -237,7 +237,7 @@ module.exports = function (RED)
 	{
 		RED.nodes.createNode(this, config)
 		const node = this 
-		const motorNum = config.motor
+		const motorNum = parseInt(config.motor)
 		const smooth = parseInt(config.smooth)
 
 		node.handle = RED.nodes.getNode(config.handle)
@@ -258,26 +258,25 @@ module.exports = function (RED)
 	{
 		RED.nodes.createNode(this, config)
 		const node = this 
-		const pinNum = config.motor 
+		const pinNum = parseInt(config.pin)
 		const smooth = parseInt(config.smooth) 
 
 		node.handle = RED.nodes.getNode(config.handle) 
 		node.handle.registerServo(pinNum) 
 
-		/*
 		node.on('input', function (msg)
 		{
-			const runSpeed  = msg.payload.speed	 === undefined ? parseInt(msg.payload) : parseInt(msg.payload.speed);
+			const runSpeed  = msg.payload.angle	 === undefined ? parseInt(msg.payload) : parseInt(msg.payload.angle);
 			const runSmooth = msg.payload.smooth === undefined ? parseInt(smooth)	   : parseInt(msg.payload.smooth);
 
-			node.handle.motors[motorNum - 1].setSpeed(runSpeed, runSmooth); 
+			node.handle.servos[node.handle.sPins.get(pinNum)].setInput(runSpeed, runSmooth); 
 			node.handle.update(true)
 		})
-		*/
 	}
 
 
 	RED.nodes.registerType('pca-manager', PCAHandle)
 	RED.nodes.registerType('pca-DC-motor', DCMotor)
+	RED.nodes.registerType('pca-servo', Servo)
 
 }
