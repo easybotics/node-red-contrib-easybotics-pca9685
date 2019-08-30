@@ -77,7 +77,6 @@ function servo (pwm)
 
 	this.drive = function (speed, driver)
 	{
-		console.log(speed)
 		driver.setPulseLength(this.pwmPin, speed)
 	}
 }
@@ -168,7 +167,7 @@ module.exports = function (RED)
 			}
 
 			if(instant) return; 
-			setTimeout(node.update, 200)
+			setTimeout(node.update, 300)
 		}
 
 		this.register = function (n)
