@@ -167,7 +167,7 @@ module.exports = function (RED)
 			}
 
 			if(instant) return; 
-			setTimeout(node.update, 300)
+			setTimeout(node.update, 100)
 		}
 
 		this.register = function (n)
@@ -198,7 +198,7 @@ module.exports = function (RED)
 		{
 			i2c: i2cBus.openSync(1), 
 			address: 0x6f, //settable
-			frequency: 50, 
+			frequency: 120, 
 			debug: false
 		}
 
