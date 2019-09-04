@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-easybotics-pca9685",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "use a pca9685 to control brushed DC motors, servos, or stepper motors",
   "keywords": [
     "raspberry",
@@ -8,14 +8,14 @@
     "pi",
     "rpi",
     "PCA9685",
-	"motor",
-	"servo", 
+    "motor",
+    "servo",
     "easybotics",
     "node-red"
   ],
   "dependencies": {
-	  "pca9685" : "^4.0.3",
-	  "i2c-bus" : "^4.0.10"
+    "pca9685": "^4.0.3",
+    "i2c-bus": "^4.0.10"
   },
   "homepage": "https://github.com/easybotics/node-red-contrib-easybotics-pca9685",
   "bugs": "https://github.com/easybotics/node-red-contrib-easybotics-pca9685/issues",
